@@ -3,38 +3,41 @@ import {
   View,
   AsyncStorage,
   Text,
+  Alert,
   KeyboardAvoidingView,
   Image,
   TextInput,
   StyleSheet,
   TouchableOpacity
 } from "react-native";
-import api from "../services/api";
-import logo from "../assets/logo.png";
+// import api from "../services/api";
+import logo from "../assets/images/logo.png";
 
 export default function Login({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [techs, setTechs] = useState("");
+  const [user, setUser] = useState("");
+  const [pass, setPass] = useState("");
 
   useEffect(() => {
     AsyncStorage.getItem("user").then(user => {
       if (user) {
-        navigation.navigate("List");
+        navigation.navigate("Home");
       }
     });
   }, []);
 
   async function handleSubmit() {
-    const response = await api.post("/sessions", {
-      email
-    });
-
-    const { _id } = response.data;
-
-    await AsyncStorage.setItem("user", _id);
-    await AsyncStorage.setItem("techs", techs);
-
-    navigation.navigate("List");
+    try {
+      const response = await api.get(
+        `/login.php?login=${user.trim()}&senha=${pass}`
+      );
+      const { idusuario } = response.data[0];
+      const { nome } = response.data[0];
+      await AsyncStorage.setItem("user", idusuario);
+      await AsyncStorage.setItem("username", nome);
+      navigation.navigate("Home");
+    } catch (err) {
+      Alert.alert("Atenção.", "Usuário ou senha incorretos.");
+    }
   }
 
   return (
@@ -42,31 +45,31 @@ export default function Login({ navigation }) {
       <Image source={logo} />
 
       <View style={styles.form}>
-        <Text style={styles.label}> SEU E-MAIL *</Text>
+        <Text style={styles.label}> USUÁRIO *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Seu e-mail"
+          placeholder="Digite seu usuário"
           placeholderTextColor="#999"
-          keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          value={email}
-          onChangeText={setEmail}
+          value={user}
+          onChangeText={setUser}
         />
 
-        <Text style={styles.label}> TECNOLOGIAS *</Text>
+        <Text style={styles.label}> SENHA *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Tecnologias de interesse"
+          placeholder="Digite sua senha."
           placeholderTextColor="#999"
           autoCapitalize="words"
           autoCorrect={false}
-          value={techs}
-          onChangeText={setTechs}
+          value={pass}
+          onChangeText={setPass}
+          secureTextEntry
         />
 
         <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-          <Text style={styles.buttonText}>Encontrar Spots</Text>
+          <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -103,7 +106,7 @@ const styles = StyleSheet.create({
 
   button: {
     height: 42,
-    backgroundColor: "#f05a5b",
+    backgroundColor: "#001880",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 2
